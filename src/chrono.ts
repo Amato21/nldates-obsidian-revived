@@ -1,10 +1,12 @@
-import chrono, { Chrono, Parser } from "chrono-node";
+// CHANGEMENT ICI : On utilise "import * as chrono" car la version 2.x n'a plus d'export par défaut
+import * as chrono from "chrono-node";
+import { Chrono, Parser } from "chrono-node";
 import { ORDINAL_NUMBER_PATTERN, parseOrdinalNumberPattern } from "./utils";
 
 function getOrdinalDateParser() {
   return ({
     pattern: () => new RegExp(ORDINAL_NUMBER_PATTERN),
-    extract: (_context, match) => {
+    extract: (_context: any, match: any) => {
       return {
         day: parseOrdinalNumberPattern(match[0]),
         month: window.moment().month(),
@@ -13,7 +15,6 @@ function getOrdinalDateParser() {
   } as Parser);
 }
 
-
 export default function getChronos(languages: string[]): Chrono[] {
   const locale = window.moment.locale();
   const isGB = locale === 'en-gb';
@@ -21,7 +22,9 @@ export default function getChronos(languages: string[]): Chrono[] {
   const chronos: Chrono[] = [];
   const ordinalDateParser = getOrdinalDateParser();
   languages.forEach(l => {
-    const c = new Chrono(chrono[l].createCasualConfiguration(isGB));
+    // @ts-ignore
+    // On utilise (chrono as any) pour être sûr de pouvoir accéder aux langues dynamiquement
+    const c = new Chrono((chrono as any)[l].createCasualConfiguration(isGB));
     c.parsers.push(ordinalDateParser);
     chronos.push(c)
   });

@@ -18,6 +18,9 @@ export default function t(key: string, lang: string, variables?: Record<string, 
     de: i18n.create({ values: de }),
     nl: i18n.create({ values: nl }),
   };
-  const translation = languages[lang](key, notFoundDefault, variables);
-  return translation === notFoundDefault ? languages["en"](key, variables) : translation;
+
+  // On force le type ici avec "(languages as any)" pour que TypeScript arrête de bloquer
+  const translation = (languages as any)[lang](key, notFoundDefault, variables);
+  
+  return translation === notFoundDefault ? (languages as any)["en"](key, variables) : translation;
 }

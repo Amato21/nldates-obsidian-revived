@@ -1,4 +1,5 @@
-import chrono, { Chrono, Parser, ParsedResult, ParsingOption } from "chrono-node";
+// CORRECTION 1 : On nettoie l'import (on ne garde que les éléments nommés)
+import { Chrono, ParsedResult, ParsingOption } from "chrono-node";
 import type { Moment } from "moment";
 import getChronos from "./chrono";
 
@@ -115,6 +116,7 @@ export default class NLDParser {
       });
     }
 
-    return this.getParsedDateResult(selectedText, referenceDate, { locale });
+    // CORRECTION 2 : On ajoute "as any" pour que TypeScript accepte l'option locale
+    return this.getParsedDateResult(selectedText, referenceDate, { locale } as any);
   }
 }
