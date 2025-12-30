@@ -5,7 +5,7 @@ import {
   EditorSuggest,
   EditorSuggestContext,
   EditorSuggestTriggerInfo,
-  MarkdownView, // <-- AJOUTÉ ICI (C'était manquant)
+  MarkdownView,
   TFile,
 } from "obsidian";
 import type NaturalLanguageDates from "src/main";
@@ -134,12 +134,41 @@ export default class DateSuggest extends EditorSuggest<string> {
     let dateStr = "";
     let makeIntoLink = this.plugin.settings.autosuggestToggleLink;
 
+    // We check if the input contains a time component using the parser logic.
+    // We cast to 'any' because parser is private in the main class.
+    const hasTime = (this.plugin as any).parser.hasTimeComponent(suggestion);
+
     if (this.suggestionIsTime(suggestion)) {
       const timePart = suggestion.substring(5);
       dateStr = this.plugin.parseTime(timePart).formattedString;
       makeIntoLink = false;
     } else {
-      dateStr = this.plugin.parseDate(suggestion).formattedString;
+      const parsedResult = this.plugin.parseDate(suggestion);
+
+      // --- HYBRID LINK LOGIC START ---
+      // If a time is detected AND linking is enabled, we split the link.
+      // Expected result: [[YYYY-MM-DD]] HH:mm
+      if (hasTime && makeIntoLink) {
+        // 1. Format the date part
+        const datePart = parsedResult.moment.format(this.plugin.settings.format);
+        
+        // 2. Format the time part (fallback to HH:mm if not set)
+        const timePart = parsedResult.moment.format(this.plugin.settings.timeFormat || "HH:mm");
+
+        // 3. Generate the markdown link ONLY for the date part
+        dateStr = generateMarkdownLink(
+          this.app,
+          datePart,
+          includeAlias ? suggestion : undefined
+        ) + " " + timePart; // Append time as plain text
+
+        // 4. Disable standard linking since we constructed it manually above
+        makeIntoLink = false; 
+      } else {
+        // Standard behavior for dates without time (e.g., @tomorrow)
+        dateStr = parsedResult.formattedString;
+      }
+      // --- HYBRID LINK LOGIC END ---
     }
 
     if (makeIntoLink) {
@@ -150,7 +179,6 @@ export default class DateSuggest extends EditorSuggest<string> {
       );
     }
 
-    // CORRECTION ICI : on utilise activeView.editor au lieu de editor tout court
     activeView.editor.replaceRange(dateStr, this.context.start, this.context.end);
   }
 

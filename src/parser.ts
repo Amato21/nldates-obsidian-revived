@@ -1,4 +1,3 @@
-// CORRECTION 1 : On nettoie l'import (on ne garde que les éléments nommés)
 import { Chrono, ParsedResult, ParsingOption } from "chrono-node";
 import type { Moment } from "moment";
 import getChronos from "./chrono";
@@ -116,7 +115,24 @@ export default class NLDParser {
       });
     }
 
-    // CORRECTION 2 : On ajoute "as any" pour que TypeScript accepte l'option locale
+    // @ts-ignore
     return this.getParsedDateResult(selectedText, referenceDate, { locale } as any);
+  }
+
+  // --- NEW FEATURE ---
+  // This function checks whether Chrono has found a specific time in the text.
+  hasTimeComponent(text: string): boolean {
+    let hasTime = false;
+    this.chronos.forEach(c => {
+      const parsedResult = c.parse(text);
+      if (parsedResult && parsedResult.length > 0) {
+        // On vérifie si l'heure est "certaine" (explicitement dite)
+        if (parsedResult[0].start.isCertain("hour")) {
+          hasTime = true;
+          return;
+        }
+      }
+    });
+    return hasTime;
   }
 }

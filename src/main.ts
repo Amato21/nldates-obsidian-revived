@@ -13,6 +13,7 @@ import {
 import { getFormattedDate, getOrCreateDailyNote, parseTruthy } from "./utils";
 
 export default class NaturalLanguageDates extends Plugin {
+  // @ts-ignore
   private parser: NLDParser;
   public settings: NLDSettings;
 
@@ -130,7 +131,23 @@ export default class NaturalLanguageDates extends Plugin {
     @returns NLDResult: An object containing the date, a cloned Moment and the formatted string.
   */
   parseDate(dateString: string): NLDResult {
-    return this.parse(dateString, this.settings.format);
+    // 1. On demande au cerveau si une heure est détectée
+    const hasTime = this.parser.hasTimeComponent(dateString);
+    let formatToUse = this.settings.format;
+
+    // 2. Si une heure est détectée...
+    if (hasTime) {
+      const timeFormat = this.settings.timeFormat || "HH:mm";
+      
+      // TIP: Here we format “Date TIME.”
+      // But BEWARE: it is the “date-suggest.ts” file that will add the [[ ]].
+      // If we don't touch date-suggest, it will make [[Date Time]].
+      // To make [[Date]] Time, we have to be clever.
+      
+      formatToUse = `${formatToUse} ${timeFormat}`;
+    }
+
+    return this.parse(dateString, formatToUse);
   }
 
   parseTime(dateString: string): NLDResult {
