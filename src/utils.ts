@@ -1,5 +1,5 @@
-import { Moment } from "moment";
 import { App, Editor, EditorRange, EditorPosition, normalizePath, TFile } from "obsidian";
+import type { Moment } from "moment";
 import {
   createDailyNote,
   getAllDailyNotes,
@@ -22,7 +22,8 @@ export default function getWordBoundaries(editor: Editor): EditorRange {
   const cursor = editor.getCursor();
 
     const pos = editor.posToOffset(cursor);
-    const word = (editor as any).cm.state.wordAt(pos);
+    const editorWithCM = editor as Editor & { cm: { state: { wordAt: (pos: number) => { from: number; to: number } } } };
+    const word = editorWithCM.cm.state.wordAt(pos);
     const wordStart = editor.offsetToPos(word.from);
     const wordEnd = editor.offsetToPos(word.to);
     return {
@@ -71,13 +72,14 @@ export function getWeekNumber(dayOfWeek: Omit<DayOfWeek, "locale-default">): num
 }
 
 export function getLocaleWeekStart(): Omit<DayOfWeek, "locale-default"> {
-  // @ts-ignore
-  const startOfWeek = window.moment.localeData()._week.dow;
+  const localeData = window.moment.localeData() as { _week?: { dow: number } };
+  const startOfWeek = localeData._week?.dow ?? 0;
   return daysOfWeek[startOfWeek];
 }
 
 export function generateMarkdownLink(app: App, subpath: string, alias?: string) {
-  const useMarkdownLinks = (app.vault as any).getConfig("useMarkdownLinks");
+  const vaultWithConfig = app.vault as typeof app.vault & { getConfig: (key: string) => boolean };
+  const useMarkdownLinks = vaultWithConfig.getConfig("useMarkdownLinks");
   const path = normalizePath(subpath);
 
   if (useMarkdownLinks) {

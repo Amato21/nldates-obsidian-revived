@@ -83,13 +83,9 @@ export class NLDSettingsTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", {
-      text: "Natural Language Dates",
-    });
+    new Setting(containerEl).setHeading().setName("Natural language dates");
 
-    containerEl.createEl("h3", {
-      text: "Parser settings",
-    });
+    new Setting(containerEl).setHeading().setName("Parser settings");
 
     new Setting(containerEl)
       .setName("Date format")
@@ -108,7 +104,7 @@ export class NLDSettingsTab extends PluginSettingTab {
       .setName("Week starts on")
       .setDesc("Which day to consider as the start of the week")
       .addDropdown((dropdown) => {
-        dropdown.addOption("locale-default", `Locale default (${localeWeekStart})`);
+        dropdown.addOption("locale-default", `Locale default (${String(localeWeekStart)})`);
         localizedWeekdays.forEach((day, i) => {
           dropdown.addOption(weekdays[i], day);
         });
@@ -119,9 +115,7 @@ export class NLDSettingsTab extends PluginSettingTab {
         });
       });
 
-    containerEl.createEl("h3", {
-      text: "Language settings",
-    });
+    new Setting(containerEl).setHeading().setName("Language settings");
 
     this.createLanguageSetting(containerEl, "English", "english", "en");
     this.createLanguageSetting(containerEl, "Japanese", "japanese", "ja");
@@ -130,9 +124,7 @@ export class NLDSettingsTab extends PluginSettingTab {
     this.createLanguageSetting(containerEl, "Portuguese", "portuguese", "pt", "partially supported");
     this.createLanguageSetting(containerEl, "Dutch", "dutch", "nl", "under development");
 
-    containerEl.createEl("h3", {
-      text: "Hotkey formatting settings",
-    });
+    new Setting(containerEl).setHeading().setName("Hotkey formatting settings");
 
     new Setting(containerEl)
       .setName("Time format")
@@ -160,9 +152,7 @@ export class NLDSettingsTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl("h3", {
-      text: "Date Autosuggest",
-    });
+    new Setting(containerEl).setHeading().setName("Date autosuggest");
 
     new Setting(containerEl)
       .setName("Enable date autosuggest")
@@ -206,21 +196,19 @@ export class NLDSettingsTab extends PluginSettingTab {
       );
   }
 
-  protected createLanguageSetting(containerEl: HTMLElement, text: string, settingKey: string, code: string, note?: string) : Setting {
+  protected createLanguageSetting(containerEl: HTMLElement, text: string, settingKey: keyof NLDSettings, code: string, note?: string) : Setting {
     note = note ? ` (${note})` : "";
     return new Setting(containerEl)
       .setName(text)
       .setDesc(`Whether to parse ${text} or not` + note)
       .addToggle(l =>
         l
-           // @ts-ignore
-          .setValue(this.plugin.settings[settingKey])
+          .setValue(this.plugin.settings[settingKey] as boolean)
           .onChange(async (v) => {
-             // @ts-ignore
-            this.plugin.settings[settingKey] = v;
+            (this.plugin.settings[settingKey] as boolean) = v;
             this.editLanguages(code, v);
             await this.plugin.saveSettings();
-            await this.plugin.resetParser();
+            this.plugin.resetParser();
           }));
   }
 

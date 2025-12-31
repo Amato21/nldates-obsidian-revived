@@ -13,7 +13,6 @@ import {
 import { getFormattedDate, getOrCreateDailyNote, parseTruthy } from "./utils";
 
 export default class NaturalLanguageDates extends Plugin {
-  // @ts-ignore
   private parser: NLDParser;
   public settings: NLDSettings;
 
@@ -21,7 +20,7 @@ export default class NaturalLanguageDates extends Plugin {
     await this.loadSettings();
     
     // Initialiser le parser immédiatement (pas besoin d'attendre onLayoutReady)
-    await this.resetParser();
+    this.resetParser();
 
     this.addCommand({
       id: "nlp-dates",
@@ -89,7 +88,7 @@ export default class NaturalLanguageDates extends Plugin {
     this.registerEditorSuggest(new DateSuggest(this.app, this));
   }
 
-  async resetParser(): Promise<void> {
+  resetParser(): void {
     try {
       this.parser = new NLDParser(this.settings.languages);
     } catch (error) {
@@ -100,7 +99,7 @@ export default class NaturalLanguageDates extends Plugin {
   }
 
   onunload(): void {
-    console.log("Unloading natural language date parser plugin");
+    // Plugin unloaded
   }
 
   async loadSettings(): Promise<void> {
@@ -139,8 +138,7 @@ export default class NaturalLanguageDates extends Plugin {
     for (const lang of this.settings.languages) {
       const flagKey = languageMap[lang];
       if (flagKey) {
-        // @ts-ignore
-        this.settings[flagKey] = true;
+        (this.settings[flagKey] as boolean) = true;
       }
     }
   }
@@ -198,6 +196,13 @@ export default class NaturalLanguageDates extends Plugin {
 
   parseTime(dateString: string): NLDResult {
     return this.parse(dateString, this.settings.timeFormat);
+  }
+
+  hasTimeComponent(text: string): boolean {
+    if (!this.parser) {
+      this.resetParser();
+    }
+    return this.parser.hasTimeComponent(text);
   }
 
   async actionHandler(params: ObsidianProtocolData): Promise<void> {

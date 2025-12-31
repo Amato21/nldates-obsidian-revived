@@ -6,7 +6,7 @@ import { ORDINAL_NUMBER_PATTERN, parseOrdinalNumberPattern } from "./utils";
 function getOrdinalDateParser() {
   return ({
     pattern: () => new RegExp(ORDINAL_NUMBER_PATTERN),
-    extract: (_context: any, match: any) => {
+    extract: (_context: unknown, match: RegExpMatchArray) => {
       return {
         day: parseOrdinalNumberPattern(match[0]),
         month: window.moment().month(),
@@ -23,14 +23,15 @@ export default function getChronos(languages: string[]): Chrono[] {
   const ordinalDateParser = getOrdinalDateParser();
   languages.forEach(l => {
     try {
-      // @ts-ignore
-      // On utilise (chrono as any) pour être sûr de pouvoir accéder aux langues dynamiquement
-      const langModule = (chrono as any)[l];
+      // On accède aux langues dynamiquement via Record
+      const langModule = (chrono as Record<string, unknown>)[l] as { createCasualConfiguration?: (isGB: boolean) => unknown } | undefined;
       if (!langModule || !langModule.createCasualConfiguration) {
         console.warn(`Language ${l} is not supported by chrono-node`);
         return;
       }
-      const c = new Chrono(langModule.createCasualConfiguration(isGB));
+      const config = langModule.createCasualConfiguration(isGB);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = new Chrono(config as any);
       c.parsers.push(ordinalDateParser);
       chronos.push(c);
     } catch (error) {
@@ -41,9 +42,11 @@ export default function getChronos(languages: string[]): Chrono[] {
   // Si aucune langue n'a pu être initialisée, utiliser l'anglais par défaut
   if (chronos.length === 0) {
     try {
-      const enModule = (chrono as any).en;
+      const enModule = (chrono as Record<string, unknown>).en as { createCasualConfiguration?: (isGB: boolean) => unknown } | undefined;
       if (enModule && enModule.createCasualConfiguration) {
-        const c = new Chrono(enModule.createCasualConfiguration(isGB));
+        const config = enModule.createCasualConfiguration(isGB);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const c = new Chrono(config as any);
         c.parsers.push(ordinalDateParser);
         chronos.push(c);
       }

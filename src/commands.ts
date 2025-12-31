@@ -28,8 +28,7 @@ export function getParseCommand(plugin: NaturalLanguageDates, mode: string): voi
 
   // --- MODIFICATION INTELLIGENTE V0.9 ---
   // On vérifie si une heure est présente dans le texte sélectionné
-  // On utilise (plugin as any) car parser est privé dans main.ts
-  const hasTime = (plugin as any).parser.hasTimeComponent(selectedText);
+  const hasTime = plugin.hasTimeComponent(selectedText);
 
   let newStr = "";
 

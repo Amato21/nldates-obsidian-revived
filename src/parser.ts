@@ -4,7 +4,6 @@ import getChronos from "./chrono";
 
 import { DayOfWeek } from "./settings";
 import {
-  getLastDayOfMonth,
   getLocaleWeekStart,
   getWeekNumber,
 } from "./utils";
@@ -107,7 +106,7 @@ export default class NLDParser {
         const prefix = weekMatch[1].toLowerCase();
         const dayName = weekMatch[2].toLowerCase();
         
-        let m = window.moment();
+        const m = window.moment();
         
         // Convertir le nom de jour en indice numérique pour éviter les problèmes de locale
         const dayIndex = this.getDayOfWeekIndex(dayName);
@@ -142,7 +141,7 @@ export default class NLDParser {
 
     if (nextDateMatch && nextDateMatch[1] === 'week') {
         // Next week -> Lundi de la semaine prochaine par défaut
-        return this.getParsedDateResult(`next ${weekStart}`, referenceDate, { forwardDate: true });
+        return this.getParsedDateResult(`next ${String(weekStart)}`, referenceDate, { forwardDate: true });
     }
     if (nextDateMatch && nextDateMatch[1] === 'month') {
         // Next month -> 1er du mois prochain
@@ -157,13 +156,13 @@ export default class NLDParser {
     return this.getParsedDateResult(selectedText, referenceDate, { 
       locale,
       forwardDate: true 
-    } as any);
+    } as ParsingOption);
   }
 
   // --- FONCTION UTILITAIRE : QUI A LE MEILLEUR SCORE ? ---
   getParsedDateResult(text: string, referenceDate?: Date, option?: ParsingOption): Date {
     if (!this.chronos || this.chronos.length === 0) return new Date();
-    let bestResult: any = null;
+    let bestResult: ParsedResult | null = null;
     let bestScore = 0;
 
     for (const c of this.chronos) {
@@ -232,7 +231,9 @@ export default class NLDParser {
             return true;
           }
         }
-      } catch (e) {}
+      } catch {
+        // Ignore parsing errors
+      }
     }
     return false;
   }

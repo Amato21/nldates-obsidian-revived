@@ -20,10 +20,14 @@ export default class DateSuggest extends EditorSuggest<string> {
     this.app = app;
     this.plugin = plugin;
 
-    // @ts-ignore
-    this.scope.register(["Shift"], "Enter", (evt: KeyboardEvent) => {
-      // @ts-ignore
-      this.suggestions.useSelectedItem(evt);
+    const scope = this.scope as typeof this.scope & {
+      register: (modifiers: string[], key: string, callback: (evt: KeyboardEvent) => boolean) => void;
+    };
+    scope.register(["Shift"], "Enter", (evt: KeyboardEvent) => {
+      const editorSuggest = this as unknown as {
+        suggestions: { useSelectedItem: (evt: KeyboardEvent) => void };
+      };
+      editorSuggest.suggestions.useSelectedItem(evt);
       return false;
     });
 
@@ -135,12 +139,7 @@ export default class DateSuggest extends EditorSuggest<string> {
     let makeIntoLink = this.plugin.settings.autosuggestToggleLink;
 
     // We check if the input contains a time component using the parser logic.
-    // We cast to 'any' because parser is private in the main class.
-    if (!(this.plugin as any).parser) {
-      this.plugin.resetParser();
-    }
-    
-    let hasTime = (this.plugin as any).parser.hasTimeComponent(suggestion);
+    let hasTime = this.plugin.hasTimeComponent(suggestion);
 
     // --- CORRECTION MULTILANGUE ---
     // Si le parser n'a pas détecté l'heure (souvent le cas en anglais pour "in 2 minutes"),
@@ -206,7 +205,7 @@ export default class DateSuggest extends EditorSuggest<string> {
   onTrigger(
     cursor: EditorPosition,
     editor: Editor,
-    file: TFile
+    _file: TFile
   ): EditorSuggestTriggerInfo {
     if (!this.plugin.settings.isAutosuggestEnabled) {
       return null;
