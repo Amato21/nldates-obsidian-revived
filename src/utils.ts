@@ -1,5 +1,4 @@
 import { App, Editor, EditorRange, EditorPosition, normalizePath, TFile } from "obsidian";
-import type { Moment } from "moment";
 import {
   createDailyNote,
   getAllDailyNotes,
@@ -7,6 +6,11 @@ import {
 } from "obsidian-daily-notes-interface";
 
 import { DayOfWeek } from "./settings";
+
+// Type alias for Moment from the moment library bundled with Obsidian
+// Using the type from the moment library types since moment is bundled with Obsidian
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+type Moment = import("moment").Moment;
 
 const daysOfWeek: Omit<DayOfWeek, "locale-default">[] = [
   "sunday",
@@ -102,7 +106,7 @@ export async function getOrCreateDailyNote(date: Moment): Promise<TFile | null> 
   // https://github.com/tgrosinger/slated-obsidian/blob/main/src/vault.ts#L17
   const desiredNote = getDailyNote(date, getAllDailyNotes());
   if (desiredNote) {
-    return Promise.resolve(desiredNote);
+    return desiredNote;
   }
   return createDailyNote(date);
 }

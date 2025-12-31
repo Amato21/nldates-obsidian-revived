@@ -1,5 +1,4 @@
 import { Chrono, ParsedResult, ParsingOption } from "chrono-node";
-import type { Moment } from "moment";
 import getChronos from "./chrono";
 
 import { DayOfWeek } from "./settings";
@@ -7,6 +6,11 @@ import {
   getLocaleWeekStart,
   getWeekNumber,
 } from "./utils";
+
+// Type alias for Moment from the moment library bundled with Obsidian
+// Using the type from the moment library types since moment is bundled with Obsidian
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+type Moment = import("moment").Moment;
 
 export interface NLDResult {
   formattedString: string;

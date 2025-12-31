@@ -1,7 +1,14 @@
 // CHANGEMENT ICI : On utilise "import * as chrono" car la version 2.x n'a plus d'export par défaut
 import * as chrono from "chrono-node";
-import { Chrono, Parser } from "chrono-node";
+import { Chrono, Parser, Refiner } from "chrono-node";
 import { ORDINAL_NUMBER_PATTERN, parseOrdinalNumberPattern } from "./utils";
+
+// Local type definition matching chrono-node's Configuration interface
+// Configuration is not exported from the main module, so we define it locally
+interface ChronoConfiguration {
+  parsers: Parser[];
+  refiners: Refiner[];
+}
 
 function getOrdinalDateParser() {
   return ({
@@ -30,8 +37,8 @@ export default function getChronos(languages: string[]): Chrono[] {
         return;
       }
       const config = langModule.createCasualConfiguration(isGB);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const c = new Chrono(config as any);
+      // Chrono constructor accepts Configuration type - cast needed because createCasualConfiguration returns unknown
+      const c = new Chrono(config as ChronoConfiguration);
       c.parsers.push(ordinalDateParser);
       chronos.push(c);
     } catch (error) {
@@ -45,8 +52,8 @@ export default function getChronos(languages: string[]): Chrono[] {
       const enModule = (chrono as Record<string, unknown>).en as { createCasualConfiguration?: (isGB: boolean) => unknown } | undefined;
       if (enModule && enModule.createCasualConfiguration) {
         const config = enModule.createCasualConfiguration(isGB);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const c = new Chrono(config as any);
+        // Chrono constructor accepts Configuration type - cast needed because createCasualConfiguration returns unknown
+        const c = new Chrono(config as ChronoConfiguration);
         c.parsers.push(ordinalDateParser);
         chronos.push(c);
       }
