@@ -136,31 +136,32 @@ export default class NLDParser {
       });
     }
 
-    // @ts-ignore
-    return this.getParsedDateResult(selectedText, referenceDate, { locale } as any);
+    // --- CORRECTION ICI ---
+    // J'ai ajouté "forwardDate: true" dans les options.
+    // Cela force l'anglais (et le français) à calculer le temps vers le FUTUR
+    // pour des phrases comme "in 2 minutes" ou "dans 2 minutes".
+    return this.getParsedDateResult(selectedText, referenceDate, { 
+      locale,
+      forwardDate: true 
+    } as any);
   }
 
   hasTimeComponent(text: string): boolean {
     if (!this.chronos) return false;
 
-    // Cette boucle va interroger le parser Anglais ET le parser Français.
-    // Peu importe le mot utilisé ("hours" ou "heures"), l'un des deux va le reconnaître.
     for (const c of this.chronos) {
       try {
         const parsedResult = c.parse(text);
         if (parsedResult && parsedResult.length > 0) {
           const start = parsedResult[0].start;
-          
-          // On vérifie si l'un des cerveaux a trouvé une Heure OU une Minute certaine.
           if (start && (start.isCertain("hour") || start.isCertain("minute"))) {
-            return true; // Trouvé ! On arrête tout et on dit "C'est une date avec heure".
+            return true;
           }
         }
       } catch (e) {
         console.warn("Check time error", e);
       }
     }
-    // Si ni l'anglais ni le français n'ont trouvé d'heure précise (comme pour "ce lundi")
     return false;
   }
 }
