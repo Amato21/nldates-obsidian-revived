@@ -76,12 +76,7 @@ export default class NLDParser {
         return window.moment().add(1, 'days').toDate();
     }
     if (text === 'yesterday' || text === 'hier') {
-        // #region agent log
-        const beforeYesterday = window.moment();
-        const yesterdayResult = window.moment().subtract(1, 'days');
-        fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parser.ts:49',message:'yesterday/hier parsing',data:{input:text,currentDate:beforeYesterday.format('YYYY-MM-DD dddd'),resultDate:yesterdayResult.format('YYYY-MM-DD dddd'),locale:window.moment.locale()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
-        return yesterdayResult.toDate();
+        return window.moment().subtract(1, 'days').toDate();
     }
 
     // ============================================================
@@ -113,35 +108,17 @@ export default class NLDParser {
         const dayName = weekMatch[2].toLowerCase();
         
         let m = window.moment();
-        // #region agent log
-        const beforeDay = m.clone();
-        const currentLocale = window.moment.locale();
-        const currentDayOfWeek = m.day();
-        fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parser.ts:77',message:'weekday match entry',data:{input:selectedText,text:text,prefix:prefix,dayName:dayName,currentDate:beforeDay.format('YYYY-MM-DD dddd'),currentDayOfWeek:currentDayOfWeek,locale:currentLocale},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D'})}).catch(()=>{});
-        // #endregion
         
         // Convertir le nom de jour en indice numérique pour éviter les problèmes de locale
         const dayIndex = this.getDayOfWeekIndex(dayName);
         
         if (prefix === 'this' || prefix === 'ce') {
-            // #region agent log
-            const beforeThisDay = m.clone();
-            fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parser.ts:120',message:'before m.day() call with index',data:{dayName:dayName,dayIndex:dayIndex,currentMoment:beforeThisDay.format('YYYY-MM-DD dddd'),locale:currentLocale},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A,B,C,D'})}).catch(()=>{});
-            // #endregion
             m.day(dayIndex);
-            // #region agent log
-            const afterThisDay = m.clone();
-            fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parser.ts:120',message:'after m.day() call with index',data:{dayName:dayName,dayIndex:dayIndex,resultMoment:afterThisDay.format('YYYY-MM-DD dddd'),resultDayOfWeek:afterThisDay.day(),locale:currentLocale},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A,B,C,D'})}).catch(()=>{});
-            // #endregion
         } else if (prefix === 'next' || prefix === 'prochain') {
             m.add(1, 'weeks').day(dayIndex);
         } else if (prefix === 'last' || prefix === 'dernier') {
             m.subtract(1, 'weeks').day(dayIndex);
         }
-        // #region agent log
-        const finalResult = m.clone();
-        fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parser.ts:91',message:'weekday parsing final result',data:{input:selectedText,prefix:prefix,dayName:dayName,finalDate:finalResult.format('YYYY-MM-DD dddd'),finalDayOfWeek:finalResult.day(),locale:currentLocale},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B,C,D'})}).catch(()=>{});
-        // #endregion
         return m.toDate();
     }
 

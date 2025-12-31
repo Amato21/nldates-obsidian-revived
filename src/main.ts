@@ -92,7 +92,13 @@ export default class NaturalLanguageDates extends Plugin {
   }
 
   async resetParser(): Promise<void> {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.ts:94',message:'resetParser called',data:{languages:this.settings.languages,languagesLength:this.settings.languages.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
     this.parser = new NLDParser(this.settings.languages);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.ts:94',message:'resetParser completed',data:{parserExists:!!this.parser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
   }
 
   onunload(): void {
@@ -100,7 +106,57 @@ export default class NaturalLanguageDates extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loadedData = await this.loadData();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.ts:102',message:'loadSettings entry',data:{loadedData:loadedData,defaultLanguages:DEFAULT_SETTINGS.languages,defaultEnglish:DEFAULT_SETTINGS.english},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.ts:102',message:'loadSettings after merge',data:{settingsLanguages:this.settings.languages,settingsEnglish:this.settings.english,settingsFrench:this.settings.french},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
+    
+    // S'assurer que languages n'est pas vide (utiliser les valeurs par défaut si nécessaire)
+    if (!this.settings.languages || this.settings.languages.length === 0) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.ts:102',message:'languages array is empty, resetting to default',data:{settingsLanguages:this.settings.languages},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+      this.settings.languages = [...DEFAULT_SETTINGS.languages];
+    }
+    
+    // Synchroniser les flags avec le tableau languages si nécessaire
+    this.syncLanguageFlags();
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0d0f280c-c24d-45f9-a1b0-98f0df462ad5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'main.ts:102',message:'loadSettings after sync',data:{settingsLanguages:this.settings.languages,settingsEnglish:this.settings.english,settingsFrench:this.settings.french},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
+  }
+
+  // Synchronise les flags de langue (english, french, etc.) avec le tableau languages
+  private syncLanguageFlags(): void {
+    const languageMap: { [key: string]: keyof NLDSettings } = {
+      'en': 'english',
+      'ja': 'japanese',
+      'fr': 'french',
+      'de': 'german',
+      'pt': 'portuguese',
+      'nl': 'dutch',
+    };
+    
+    // Réinitialiser tous les flags
+    this.settings.english = false;
+    this.settings.japanese = false;
+    this.settings.french = false;
+    this.settings.german = false;
+    this.settings.portuguese = false;
+    this.settings.dutch = false;
+    
+    // Activer les flags correspondant aux langues dans le tableau
+    for (const lang of this.settings.languages) {
+      const flagKey = languageMap[lang];
+      if (flagKey) {
+        // @ts-ignore
+        this.settings[flagKey] = true;
+      }
+    }
   }
 
   async saveSettings(): Promise<void> {
