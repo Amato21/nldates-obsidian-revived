@@ -8,6 +8,7 @@ import {
   getWeekNumber,
 } from "./utils";
 
+
 // Type alias for Moment from the moment library bundled with Obsidian
 // Using the type from the moment library types since moment is bundled with Obsidian
 // The moment package is bundled with Obsidian, but the Moment type is not exported from obsidian module
@@ -26,6 +27,7 @@ export interface NLDRangeResult {
   startMoment: Moment;
   endMoment: Moment;
   isRange: true;
+  dateList?: Moment[]; // Liste de toutes les dates dans la plage
 }
 
 export default class NLDParser {
@@ -340,7 +342,8 @@ export default class NLDParser {
         }
 
         // Additionner les deux durées
-        return window.moment().add(value1, unit1).add(value2, unit2).toDate();
+        const resultDate = window.moment().add(value1, unit1).add(value2, unit2).toDate();
+        return resultDate;
     }
     
     // Ensuite vérifier les expressions simples "in 2 minutes"
@@ -463,7 +466,8 @@ export default class NLDParser {
         return new Date();
     }
 
-    // -- Gestion des cas "Next Week" / "Next Month" génériques (non gérés par le Regex) --
+    // -- Gestion des cas "Next Month" / "Next Year" génériques (non gérés par le Regex) --
+    // Note: "Next Week" est maintenant géré par getParsedDateRange pour générer une liste de dates
     // Créer un pattern pour "next" dans toutes les langues
     const nextPattern = Array.from(this.prefixKeywords.next).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
     const nextDateMatch = selectedText.match(new RegExp(`(${nextPattern})\\s+([\\w]+)`, 'i'));
@@ -473,29 +477,38 @@ export default class NLDParser {
 
     if (nextDateMatch) {
         const period = nextDateMatch[2].toLowerCase();
-        // Vérifier si c'est "week", "month" ou "year" dans toutes les langues
+        // Vérifier si c'est "week" - si oui, laisser getParsedDateRange le gérer
+        let isNextWeek = false;
         for (const lang of this.languages) {
             if (period === t('week', lang).toLowerCase()) {
-                // Next week -> Lundi de la semaine prochaine par défaut
-                const nextWord = Array.from(this.prefixKeywords.next)[0];
-                return this.getParsedDateResult(`${nextWord} ${String(weekStart)}`, referenceDate, { forwardDate: true });
+                isNextWeek = true;
+                break;
             }
-            if (period === t('month', lang).toLowerCase()) {
-                // Next month -> 1er du mois prochain
-                return window.moment().add(1, 'months').startOf('month').toDate();
-            }
-            if (period === t('year', lang).toLowerCase()) {
-                // Next year -> 1er Janvier de l'année prochaine
-                return window.moment().add(1, 'years').startOf('year').toDate();
+        }
+        // Si c'est "next week", on laisse getParsedDateRange le gérer
+        if (isNextWeek) {
+            // Continuer avec le parsing standard qui va échouer, permettant à getParsedDateRange de prendre le relais
+        } else {
+            // Vérifier si c'est "month" ou "year" dans toutes les langues
+            for (const lang of this.languages) {
+                if (period === t('month', lang).toLowerCase()) {
+                    // Next month -> 1er du mois prochain
+                    return window.moment().add(1, 'months').startOf('month').toDate();
+                }
+                if (period === t('year', lang).toLowerCase()) {
+                    // Next year -> 1er Janvier de l'année prochaine
+                    return window.moment().add(1, 'years').startOf('year').toDate();
+                }
             }
         }
     }
 
     // Appel standard à la librairie avec forwardDate forcé
-    return this.getParsedDateResult(selectedText, referenceDate, { 
+    const chronoResult = this.getParsedDateResult(selectedText, referenceDate, { 
       locale,
       forwardDate: true 
     } as ParsingOption);
+    return chronoResult;
   }
 
   // --- MÉTHODE POUR PARSER LES PLAGES DE DATES ---
@@ -518,24 +531,39 @@ export default class NLDParser {
         startMoment.add(1, 'week');
       }
       
-      // Trouver le prochain jour de fin (peut être dans la même semaine ou la suivante)
+      // Trouver le prochain jour de fin (doit être après ou égal au jour de début)
       let endMoment = window.moment().day(endDayIndex);
+      // Si le jour de fin est avant le jour de début, on prend celui de la semaine suivante
       if (endMoment.isBefore(startMoment, 'day')) {
         endMoment.add(1, 'week');
+      }
+      // S'assurer que endMoment est toujours après ou égal à startMoment
+      if (endMoment.isBefore(startMoment, 'day')) {
+        endMoment = startMoment.clone().add(1, 'week').day(endDayIndex);
       }
       
       const format = "YYYY-MM-DD";
       const startFormatted = startMoment.format(format);
       const endFormatted = endMoment.format(format);
       
-      return {
+      // Générer la liste de toutes les dates dans la plage
+      const dateList: Moment[] = [];
+      let currentMoment = startMoment.clone();
+      while (currentMoment.isSameOrBefore(endMoment, 'day')) {
+        dateList.push(currentMoment.clone());
+        currentMoment.add(1, 'day');
+      }
+      
+      const result: NLDRangeResult = {
         formattedString: `${startFormatted} to ${endFormatted}`,
         startDate: startMoment.toDate(),
         endDate: endMoment.toDate(),
         startMoment: startMoment.clone(),
         endMoment: endMoment.clone(),
-        isRange: true,
+        isRange: true as const,
+        dateList: dateList,
       };
+      return result;
     }
     
     // Vérifier "next week" comme plage
@@ -556,14 +584,24 @@ export default class NLDParser {
           const startFormatted = startMoment.format(format);
           const endFormatted = endMoment.format(format);
           
-          return {
+          // Générer la liste de toutes les dates dans la plage
+          const dateList: Moment[] = [];
+          let currentMoment = startMoment.clone();
+          while (currentMoment.isSameOrBefore(endMoment, 'day')) {
+            dateList.push(currentMoment.clone());
+            currentMoment.add(1, 'day');
+          }
+          
+          const result: NLDRangeResult = {
             formattedString: `${startFormatted} to ${endFormatted}`,
             startDate: startMoment.toDate(),
             endDate: endMoment.toDate(),
             startMoment: startMoment.clone(),
             endMoment: endMoment.clone(),
-            isRange: true,
+            isRange: true as const,
+            dateList: dateList,
           };
+          return result;
         }
       }
     }
@@ -620,7 +658,21 @@ export default class NLDParser {
       return true;
     }
 
-    // 2. Si c'est un délai en HEURES ou MINUTES -> OUI
+    // 2. Vérifier d'abord les combinaisons "in X weeks and Y days"
+    const relCombinedMatch = text.match(this.regexRelativeCombined);
+    if (relCombinedMatch) {
+        const unitStr1 = relCombinedMatch[2].toLowerCase();
+        const unitStr2 = relCombinedMatch[4].toLowerCase();
+        // Si l'une des unités est heures ou minutes -> OUI
+        if (unitStr1.startsWith('h') || unitStr1 === 'm' || unitStr1.startsWith('min') ||
+            unitStr2.startsWith('h') || unitStr2 === 'm' || unitStr2.startsWith('min')) {
+            return true;
+        }
+        // Sinon -> NON (jours, semaines, mois, années)
+        return false;
+    }
+
+    // 3. Si c'est un délai simple en HEURES ou MINUTES -> OUI
     const relMatch = text.match(this.regexRelative);
     if (relMatch) {
         const unitStr = relMatch[2].toLowerCase();
@@ -632,12 +684,16 @@ export default class NLDParser {
         return false;
     }
 
-    // 3. Si c'est un jour spécifique avec heure (Next Monday at 3pm) -> OUI
-    if (this.regexWeekdayWithTime && this.regexWeekdayWithTime.test(text)) return true;
+    // 4. Si c'est un jour spécifique avec heure (Next Monday at 3pm) -> OUI
+    if (this.regexWeekdayWithTime && this.regexWeekdayWithTime.test(text)) {
+      return true;
+    }
     
-    // 4. Si c'est un jour spécifique sans heure (Next Monday) ou Tomorrow -> NON (Généralement on veut juste la date)
+    // 5. Si c'est un jour spécifique sans heure (Next Monday) ou Tomorrow -> NON (Généralement on veut juste la date)
     // Si tu veux l'heure pour "Demain", enlève les lignes ci-dessous.
-    if (this.regexWeekday.test(text)) return false;
+    if (this.regexWeekday.test(text)) {
+      return false;
+    }
     
     // Vérifier les mots-clés today/tomorrow/yesterday dans toutes les langues
     const dateKeywords = ['today', 'tomorrow', 'yesterday'];
@@ -654,8 +710,10 @@ export default class NLDParser {
       return false;
     }
 
-    // 5. Sinon, on demande à la librairie si elle voit une heure explicite (ex: "Tomorrow at 5pm")
-    if (!this.chronos) return false;
+    // 6. Sinon, on demande à la librairie si elle voit une heure explicite (ex: "Tomorrow at 5pm")
+    if (!this.chronos) {
+      return false;
+    }
     for (const c of this.chronos) {
       try {
         const parsedResult = c.parse(text);
@@ -665,7 +723,7 @@ export default class NLDParser {
             return true;
           }
         }
-      } catch {
+      } catch (e) {
         // Ignore parsing errors
       }
     }

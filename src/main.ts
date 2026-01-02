@@ -187,7 +187,8 @@ export default class NaturalLanguageDates extends Plugin {
       formatToUse = `${formatToUse} ${timeFormat}`;
     }
 
-    return this.parse(dateString, formatToUse);
+    const result = this.parse(dateString, formatToUse);
+    return result;
   }
 
   /*

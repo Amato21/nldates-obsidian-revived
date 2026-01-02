@@ -1,6 +1,7 @@
 import { MarkdownView } from "obsidian";
 import { adjustCursor, getSelectedText } from "./utils";
 import NaturalLanguageDates from "./main";
+import t from "./lang/helper";
 
 export function getParseCommand(plugin: NaturalLanguageDates, mode: string): void {
   const { workspace } = plugin.app;
@@ -17,25 +18,45 @@ export function getParseCommand(plugin: NaturalLanguageDates, mode: string): voi
 
   // Vérifier d'abord si c'est une plage de dates
   const dateRange = plugin.parseDateRange(selectedText);
-  
   if (dateRange) {
     // C'est une plage de dates
     let newStr = "";
-    const startFormatted = dateRange.startMoment.format(plugin.settings.format);
-    const endFormatted = dateRange.endMoment.format(plugin.settings.format);
     
-    if (mode == "replace") {
-      // Générer des liens pour la plage : [[start]] to [[end]]
-      newStr = `[[${startFormatted}]] to [[${endFormatted}]]`;
-    } else if (mode == "link") {
-      // Lien Markdown standard
-      newStr = `[${selectedText}](${dateRange.formattedString})`;
-    } else if (mode == "clean") {
-      // Texte brut sans lien
-      newStr = `${startFormatted} to ${endFormatted}`;
-    } else if (mode == "time") {
-      // Pas d'heure pour les plages
-      newStr = `${startFormatted} to ${endFormatted}`;
+    // Si on a une liste de dates, générer une liste de liens au lieu d'une plage
+    if (dateRange.dateList && dateRange.dateList.length > 0) {
+      const dateLinks = dateRange.dateList.map(moment => {
+        const formatted = moment.format(plugin.settings.format);
+        if (mode == "replace") {
+          return `[[${formatted}]]`;
+        } else if (mode == "link") {
+          return `[${formatted}](${formatted})`;
+        } else {
+          return formatted;
+        }
+      });
+      newStr = dateLinks.join(', ');
+    } else {
+      // Fallback vers l'ancien comportement (plage)
+      const startFormatted = dateRange.startMoment.format(plugin.settings.format);
+      const endFormatted = dateRange.endMoment.format(plugin.settings.format);
+      
+      // Obtenir la traduction de "to" selon la langue principale
+      const primaryLang = plugin.settings.languages[0] || 'en';
+      const toTranslation = t("to", primaryLang).split('|')[0]; // Prendre la première variante
+      
+      if (mode == "replace") {
+        // Générer des liens pour la plage : [[start]] to [[end]]
+        newStr = `[[${startFormatted}]] ${toTranslation} [[${endFormatted}]]`;
+      } else if (mode == "link") {
+        // Lien Markdown standard
+        newStr = `[${selectedText}](${dateRange.formattedString})`;
+      } else if (mode == "clean") {
+        // Texte brut sans lien
+        newStr = `${startFormatted} ${toTranslation} ${endFormatted}`;
+      } else if (mode == "time") {
+        // Pas d'heure pour les plages
+        newStr = `${startFormatted} ${toTranslation} ${endFormatted}`;
+      }
     }
     
     editor.replaceSelection(newStr);

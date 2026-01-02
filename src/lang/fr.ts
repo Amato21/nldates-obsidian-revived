@@ -39,7 +39,7 @@ const dict = {
   and: "et",
   at: "à|a",
   from: "de|depuis|du",
-  to: "à|jusqu'à|jusqu'au|au",
+  to: "à|a|jusqu'à|jusqu'au|au",
 } as const;
 
 export default dict;

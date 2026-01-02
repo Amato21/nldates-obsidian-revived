@@ -49,8 +49,8 @@ Type `@` (default trigger) followed by a natural date.
 * `@in 20 minutes` → `[[2024-12-30]] 23:50`
 * `@in 2 weeks and 3 days` → `[[2025-01-22]]`
 * `@next Monday at 3pm` → `[[2025-01-06]] 15:00`
-* `@from Monday to Friday` → `[[2025-01-06]] to [[2025-01-10]]`
-* `@next week` → `[[2025-01-06]] to [[2025-01-12]]`
+* `@from Monday to Friday` → `[[2025-01-06]], [[2025-01-07]], [[2025-01-08]], [[2025-01-09]], [[2025-01-10]]`
+* `@next week` → `[[2025-01-06]], [[2025-01-07]], [[2025-01-08]], [[2025-01-09]], [[2025-01-10]], [[2025-01-11]], [[2025-01-12]]`
 
 Press <kbd>Shift</kbd> + <kbd>Enter</kbd> to keep the original text as an alias (e.g. `[[2024-12-30|today]]`).
 

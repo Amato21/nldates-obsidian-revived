@@ -12,3 +12,4 @@ main.js
 # MacOS
 .DS_Store
 AMELIORATIONS_FUTURES.md
+.cursor/debug.log
