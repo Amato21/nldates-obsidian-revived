@@ -2,7 +2,7 @@ const dict = {
   today: "Vandaag",
   tomorrow: "Morgen",
   yesterday: "Gisteren",
-  next: "volgende?",
+  next: "volgende",
   last: "vorige|laatste",
   this: "deze|dit",
   in: "over",
@@ -30,6 +30,12 @@ const dict = {
   minusminutes: "-%{timeDelta} minuten",
   plushour: "+%{timeDelta} uur",
   minushour: "-%{timeDelta} uur",
+  minute: "minuut|minuten|min|mins|m",
+  hour: "uur|uren|u|h",
+  day: "dag|dagen|d",
+  week: "week|weken|w",
+  month: "maand|maanden|M|mo",
+  year: "jaar|jaren|j|y",
 } as const;
 
 export default dict;

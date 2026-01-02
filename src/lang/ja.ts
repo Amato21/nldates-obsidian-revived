@@ -5,7 +5,7 @@ const dict = {
   next: "次|翌|来", // "Tsugi/Yoku/Rai" (ex: Rai-shu = Semaine prochaine)
   last: "前|去|先|昨", // "Mae/Kyo/Sen/Saku" (ex: Sen-shu = Semaine dernière)
   this: "今|本|当", // "Ima/Hon/To" (ex: Kon-shu = Cette semaine)
-  in: "あと", // "Ato" (Pour dire "Dans X minutes" -> "Ato X fun")
+  in: "あと|ato", // "Ato" (Pour dire "Dans X minutes" -> "Ato X fun")
   week: "週",
   month: "月",
   year: "年",
@@ -30,6 +30,12 @@ const dict = {
   minusminutes: "-%{timeDelta} 分",
   plushour: "+%{timeDelta} 時間",
   minushour: "-%{timeDelta} 時間",
+  minute: "分|ふん|ぷん|fun",
+  hour: "時間|じかん|時|じ",
+  day: "日|にち",
+  week: "週|週間|しゅう|しゅうかん",
+  month: "月|ヶ月|かげつ|がつ",
+  year: "年|ねん",
 } as const;
 
 export default dict;

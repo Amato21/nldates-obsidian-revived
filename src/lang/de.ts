@@ -30,6 +30,12 @@ const dict = {
   minusminutes: "-%{timeDelta} Minuten",
   plushour: "+%{timeDelta} Stunde",
   minushour: "-%{timeDelta} Stunde",
+  minute: "Minute|Minuten|min|mins|m",
+  hour: "Stunde|Stunden|Std|h",
+  day: "Tag|Tage|d|t",
+  week: "Woche|Wochen|w",
+  month: "Monat|Monate|M|mo",
+  year: "Jahr|Jahre|j|y",
 } as const;
 
 export default dict;

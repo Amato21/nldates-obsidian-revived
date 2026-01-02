@@ -1,7 +1,7 @@
 {
     "id": "nldates-revived",
     "name": "Natural Language Dates (Revived)",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "minAppVersion": "1.0.0",
     "description": "Auto-complete dates and times naturally (@today, @dans 20 min). Now with multilingual support and hybrid links.",
     "author": "Amato21 (Original by argenos)",

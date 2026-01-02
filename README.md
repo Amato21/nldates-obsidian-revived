@@ -3,7 +3,17 @@
 This is a **revived and improved version** of the popular "Natural Language Dates" plugin for Obsidian.
 It brings the plugin back to life with a modern engine, true multilingual support, and smarter time handling.
 
-## ✨ New Features in v0.8.0
+## ✨ New Features
+
+### v0.9.0 - Advanced Multilingual Support 🚀
+* **🌍 Complete Multilingual Engine:** Full support for **English, French, German, Japanese, Dutch, and Portuguese**!
+    * Each language works **100%** with its own native words and units
+    * *Examples:* `@ato 2 fun` (Japanese), `@in 2 Minuten` (German), `@dans 2 min` (French), `@over 2 minuten` (Dutch)
+    * All time units (minutes, hours, days, weeks, months, years) are fully translated
+    * All weekdays are recognized in all languages
+    * Dynamic regex generation from translations - no hardcoded words!
+
+### v0.8.0
 * **🌍 Multilingual Support:** Now supports **English, French, German, Japanese, Dutch, and Portuguese**!
     * *Examples:* `@tomorrow`, `@in 20 minutes`, `@Next Monday`, `@next friday`.
 * **🧠 Smart Time Parsing:** The plugin intelligently detects if you included a time in your sentence.
